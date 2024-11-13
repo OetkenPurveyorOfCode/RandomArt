@@ -12,7 +12,7 @@ struct Vector2 {
 }
 
 fn gradient(input: Vector2) -> Vector3 {
-    return Vector3{x: input.x, y: input.y, z: 0.0};
+    return Vector3{x: input.x, y: input.x, z: input.x};
 }
 
 fn main() {
@@ -22,7 +22,7 @@ fn main() {
     for y in 0..height {
         for x in 0..width {
             let v3 = gradient(Vector2{x: 2.0*x as f32/width as f32 - 1.0, y: 2.0*y as f32/height as f32 - 1.0});
-            img.put_pixel(x, y, Rgb([(v3.x*255.0) as u8, (v3.y*255.0) as u8, (v3.z*255.0) as u8]));
+            img.put_pixel(x, y, Rgb([((v3.x+1.0)*255.0/2.0) as u8, ((v3.y+1.0)*255.0/2.0) as u8, ((v3.z+1.0)*255.0/2.0) as u8]));
         }
     }
     img.save("out.bmp");
