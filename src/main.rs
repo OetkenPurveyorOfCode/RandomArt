@@ -108,9 +108,9 @@ fn main() {
     let height = 200;
     let width = 300;
     let node : Node = Node::Triple(
-        Box::new(Node::Mul(Box::new(Node::X), Box::new(Node::Y))),
-        Box::new(Node::Number(0.5)), 
-        Box::new(Node::Number(0.5))
+        Box::new(Node::X),
+        Box::new(Node::X),
+        Box::new(Node::X),
     );
     dbg!(eval_render(node.clone(), Vector2{x: 0.0, y: 0.0}));
     dbg!(&node);
