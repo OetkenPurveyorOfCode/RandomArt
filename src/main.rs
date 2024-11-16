@@ -58,7 +58,9 @@ fn eval(node: Node, uv: Vector2) -> Result<Node, EvalError> {
                 (Node::Number(a), Node::Number(b)) => {
                     return Ok(Node::Number(a+b));
                 }
-                (a, b) => Err(EvalError::AddError(a, b)),
+                (a, b) => {
+                    return Err(EvalError::AddError(a, b));
+                }
             }
         }
         Node::Mul(x, y) => {
@@ -68,10 +70,33 @@ fn eval(node: Node, uv: Vector2) -> Result<Node, EvalError> {
                 (Node::Number(a), Node::Number(b)) => {
                     return Ok(Node::Number(a*b));
                 }
-                (a, b) => Err(EvalError::MulError(a, b)),
+                (a, b) => {
+                    return Err(EvalError::MulError(a, b));
+                }
             }
         }
-        _ => todo!(),
+        Node::Triple(a, b, c) => {
+            return Ok(Node::Triple(a, b, c));
+        }
+    }
+}
+
+fn eval_render(node: Node, uv: Vector2) -> Vector3 {
+    let node = eval(node, uv).expect("Error evaluating");
+    match node {
+        Node::Triple(a, b, c) => {
+            match (*a, *b, *c) {
+                (Node::Number(a), Node::Number(b), Node::Number(c)) => {
+                    return Vector3{x: a, y: b, z: c};
+                }
+                (a, b, c) => {
+                    panic!("Expected number found {a:?} {b:?} {c:?}");
+                }
+            }
+        }
+        _ => {
+            panic!("Wrong result type (expected triple): {node:?}");
+        }
     }
 }
 
