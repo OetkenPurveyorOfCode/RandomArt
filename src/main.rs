@@ -1,7 +1,7 @@
 use image::{RgbImage, Rgb};
 use thiserror::Error;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 struct Vector3 {
     x: f32,
     y: f32,
@@ -76,7 +76,11 @@ fn eval(node: Node, uv: Vector2) -> Result<Node, EvalError> {
             }
         }
         Node::Triple(a, b, c) => {
-            return Ok(Node::Triple(a, b, c));
+            return Ok(Node::Triple(
+                Box::new(eval(*a, uv.clone())?),
+                Box::new(eval(*b, uv.clone())?),
+                Box::new(eval(*c, uv.clone())?),
+            ));
         }
     }
 }
@@ -104,15 +108,20 @@ fn main() {
     let height = 200;
     let width = 300;
     let node : Node = Node::Triple(
-        Box::new(Node::Add(Box::new(Node::X), Box::new(Node::Y))),
-        Box::new(Node::Y), 
+        Box::new(Node::Mul(Box::new(Node::X), Box::new(Node::Y))),
+        Box::new(Node::Number(0.5)), 
         Box::new(Node::Number(0.5))
     );
+    dbg!(eval_render(node.clone(), Vector2{x: 0.0, y: 0.0}));
     dbg!(&node);
     let mut img = RgbImage::new(width, height);
     for y in 0..height {
         for x in 0..width {
-            let v3 = cool(Vector2{x: 2.0*x as f32/width as f32 - 1.0, y: 2.0*y as f32/height as f32 - 1.0});
+            let uv =  Vector2{
+                x: 2.0*x as f32/width  as f32 - 1.0,
+                y: 2.0*y as f32/height as f32 - 1.0,
+            };
+            let v3 = eval_render(node.clone(), uv);
             img.put_pixel(x, y, Rgb([((v3.x+1.0)*255.0/2.0) as u8, ((v3.y+1.0)*255.0/2.0) as u8, ((v3.z+1.0)*255.0/2.0) as u8]));
         }
     }
