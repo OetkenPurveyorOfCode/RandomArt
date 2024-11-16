@@ -1,17 +1,20 @@
 use image::{RgbImage, Rgb};
+use thiserror::Error;
 
+#[derive(Clone)]
 struct Vector3 {
     x: f32,
     y: f32,
     z: f32,
 }
 
+#[derive(Clone)]
 struct Vector2 {
     x: f32,
     y: f32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum Node {
     X,
     Y,
@@ -35,8 +38,41 @@ fn cool(input: Vector2) -> Vector3 {
     }
 }
 
-fn eval(node: Node, uv: Vector2) -> Vector3 {
-    return Vector3{x: uv.x, y: uv.x, z: uv.x};
+#[derive(Error, Debug)]
+enum EvalError {
+    #[error("TypeError:Unexpected operand types for Add: `{0:?}` + `{1:?}`")]
+    AddError(Node, Node),
+    #[error("TypeError:Unexpected operand types for Add: `{0:?}` * `{1:?}`")]
+    MulError(Node, Node),
+}
+
+fn eval(node: Node, uv: Vector2) -> Result<Node, EvalError> {
+    match node {
+        Node::X => {return Ok(Node::Number(uv.x));}
+        Node::Y => {return Ok(Node::Number(uv.y));}
+        Node::Number(_) => {return Ok(node);}
+        Node::Add(x, y) => {
+            let lhs = eval(*x, uv.clone())?;
+            let rhs = eval(*y, uv.clone())?;
+            match (lhs, rhs) {
+                (Node::Number(a), Node::Number(b)) => {
+                    return Ok(Node::Number(a+b));
+                }
+                (a, b) => Err(EvalError::AddError(a, b)),
+            }
+        }
+        Node::Mul(x, y) => {
+            let lhs = eval(*x, uv.clone())?;
+            let rhs = eval(*y, uv.clone())?;
+            match (lhs, rhs) {
+                (Node::Number(a), Node::Number(b)) => {
+                    return Ok(Node::Number(a*b));
+                }
+                (a, b) => Err(EvalError::MulError(a, b)),
+            }
+        }
+        _ => todo!(),
+    }
 }
 
 fn main() {
