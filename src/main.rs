@@ -29,18 +29,6 @@ enum Node {
     Triple(Box<Node>, Box<Node>, Box<Node>),
 }
 
-fn cool(input: Vector2) -> Vector3 {
-    if input.x * input.y >= 0.0 {
-        return Vector3 {
-            x: input.x,
-            y: input.y,
-            z: 1.0,
-        };
-    } else {
-        let r = input.x % input.y;
-        return Vector3 { x: r, y: r, z: r };
-    }
-}
 
 #[derive(Error, Debug)]
 enum EvalError {
