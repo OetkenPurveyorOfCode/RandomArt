@@ -634,6 +634,7 @@ name = "randomart"
 version = "0.1.0"
 dependencies = [
  "image",
+ "rand",
  "thiserror 2.0.3",
 ]
 
