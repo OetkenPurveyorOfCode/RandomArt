@@ -1,7 +1,6 @@
 use image::{Rgb, RgbImage};
 use thiserror::Error;
 use std::io::Write;
-use rand::Rng;
 use rand::distributions::{Distribution, Uniform};
 
 #[derive(Debug, Clone)]
@@ -18,6 +17,7 @@ struct Vector2 {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 enum Node {
     X,
     Y,
@@ -293,23 +293,6 @@ fn random_art_node(grammar: &Vec<Vec<Rule>>, node: Node, depth: isize, terminal:
     }
 }
 
-fn is_terminal_rule(node: &Node) -> bool {
-    match node {
-        Node::Rule(_) => {
-            return false;
-        }
-        Node::Add(x, y) | Node::Mul(x, y) | Node::Fmodf(x, y) | Node::GreaterThan(x, y) => {
-            return is_terminal_rule(x) && is_terminal_rule(y);
-        }
-        Node::Triple(x, y, z) | Node::IfThenElse(x, y, z) => {
-            return is_terminal_rule(x) && is_terminal_rule(y) && is_terminal_rule(z);
-        }
-        _ => {
-            return true;
-        }
-    }
-}
-
 const MAX_ATTEMPTS: u32 = 10;
 
 fn random_art_rule(
@@ -319,7 +302,6 @@ fn random_art_rule(
         return None;
     }
     let ruleset: &Vec<Rule> = &grammar[entry];
-    let mut rng = rand::thread_rng();
     for _ in 0..MAX_ATTEMPTS {
 
         let mut rng = rand::thread_rng();
@@ -339,9 +321,40 @@ fn random_art_rule(
     return None;
 }
 
+const HELP: &str = "\
+RandomArt
+
+USAGE:
+  app [OPTIONS] <outfilename>
+
+OPTIONS:
+  -h, --help        prints help information
+  --width NUMBER    width in pixels
+  --height NUMBER   height in pixels
+  --depth NUMBER    expression tree depth (recommended less than 15)
+
+ARGS:
+  <INPUT>           Output image (must end in .bmp, .png, .jpg)
+";
+
+fn parse_number(s: &str) -> Result<u32, &'static str> {
+    s.parse().map_err(|_| "Not a number")
+}
+
+fn parse_number_isize(s: &str) -> Result<isize, &'static str> {
+    s.parse().map_err(|_| "Not a number")
+}
+
 fn main() {
-    let height = 200;
-    let width = 300;
+    let mut pargs = pico_args::Arguments::from_env();
+    if pargs.contains(["-h", "--help"]) {
+        print!("{}", HELP);
+        std::process::exit(0);
+    }
+    let width = pargs.opt_value_from_fn("--width", parse_number).expect("Invalid argument syntax").unwrap_or(300);
+    let height = pargs.opt_value_from_fn("--height", parse_number).expect("Invalid argument syntax").unwrap_or(300);
+    let depth = pargs.opt_value_from_fn("--depth", parse_number_isize).expect("Invalid argument syntax").unwrap_or(10);
+    let filename : String= pargs.free_from_str().expect("Invalid argument syntax");
     
     let grammar : Vec<Vec<Rule>> = vec![
         vec![
@@ -383,11 +396,11 @@ fn main() {
             }
         ]
     ];
-    let node = random_art_rule(&grammar, 0, 10, 1).expect(
+    let node = random_art_rule(&grammar, 0, depth, 1).expect(
         "Could not satisfy grammar. Is grammar terminal?"
     );
     
-    dbg!(eval_render(node.clone(), Vector2 { x: 0.0, y: 0.0 }));
+    eval_render(node.clone(), Vector2 { x: 0.0, y: 0.0 });
     dbg!(&node);
     let mut img = RgbImage::new(width, height);
     let mut percent = 0.0;
@@ -414,6 +427,6 @@ fn main() {
             percent += 1.0;
         }
     }
-    println!();
-    img.save("out.bmp").expect("Failed to save image");
+    println!("Progress 100%");
+    img.save(filename).expect("Failed to save image");
 }
